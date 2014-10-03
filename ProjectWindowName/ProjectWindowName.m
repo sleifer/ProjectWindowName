@@ -79,13 +79,7 @@ static ProjectWindowName *sharedPlugin;
 	dispatch_once(&onceToken, ^{
 		Class IDEWorkspaceWindowControllerClass = NSClassFromString (@"IDEWorkspaceWindowController");
 		
-		NSLog(@"class: %@", IDEWorkspaceWindowControllerClass);
-		
-		[self swizzleClass:IDEWorkspaceWindowControllerClass originalSelector:@selector(synchronizeWindowTitleWithDocumentName) swizzledSelector:@selector(xxx_synchronizeWindowTitleWithDocumentName) instanceMethod:YES];
-		
 		[self swizzleClass:IDEWorkspaceWindowControllerClass originalSelector:@selector(_updateWindowTitle) swizzledSelector:@selector(xxx__updateWindowTitle) instanceMethod:YES];
-		
-		NSLog(@"[ProjectWindowName] swizzle IDEWorkspaceWindowController -synchronizeWindowTitleWithDocumentName");
 	});
 }
 
@@ -101,11 +95,6 @@ static ProjectWindowName *sharedPlugin;
 			originalMethod = class_getClassMethod(class, originalSelector);
 			swizzledMethod = class_getClassMethod(class, swizzledSelector);
 		}
-		
-		NSLog(@"oSel: %@", NSStringFromSelector(originalSelector));
-		NSLog(@"sSel: %@", NSStringFromSelector(swizzledSelector));
-		NSLog(@"oMet: %p", originalMethod);
-		NSLog(@"sMet: %p", swizzledMethod);
 		
 		BOOL didAddMethod = class_addMethod(class, originalSelector, method_getImplementation(swizzledMethod), method_getTypeEncoding(swizzledMethod));
 		
@@ -133,28 +122,31 @@ static ProjectWindowName *sharedPlugin;
 
 @implementation NSObject (ProjectWindowName)
 
-- (void)xxx_synchronizeWindowTitleWithDocumentName
-{
-	[self xxx_synchronizeWindowTitleWithDocumentName];
-	NSLog(@"xxx_synchronizeWindowTitleWithDocumentName");
-}
-
 - (void)xxx__updateWindowTitle
 {
 	[self xxx__updateWindowTitle];
 	NSLog(@"xxx__updateWindowTitle: %@ [%@]", self, NSStringFromClass([self class]));
 	
-	Ivar ivar = class_getInstanceVariable([self class], "_lastObservedEditorDocument");
-	NSLog(@"_lastObservedEditorDocument %p", ivar);
-	id ivarval = object_getIvar(self, ivar);
-	NSLog(@"_lastObservedEditorDocument %@", ivarval);
+	NSWindow *window = [self performSelector:@selector(window)];
+	NSString *windowTitle = [window title];
+	NSLog(@"window: %@", window);
+	NSLog(@"window title: %@", [window title]);
+	NSLog(@"window representedURL: %@", [window representedURL]);
 	
-	ivar = class_getInstanceVariable([self class], "_workspace");
-	NSLog(@"_workspace %p", ivar);
-	ivarval = object_getIvar(self, ivar);
-	NSLog(@"_workspace %@", ivarval);
+	id workspace = object_getIvar(self, class_getInstanceVariable([self class], "_workspace"));
+	NSLog(@"_workspace %@", workspace);
 
+	NSString *workspaceName = [workspace performSelector:@selector(name)];
+	NSLog(@"representingTitle: %@", [workspace performSelector:@selector(representingTitle)]);
+	NSLog(@"representingFilePath: %@", [workspace performSelector:@selector(representingFilePath)]);
+	NSLog(@"name: %@", [workspace performSelector:@selector(name)]);
+	NSLog(@"displayName: %@", [workspace performSelector:@selector(displayName)]);
 
+	NSString *newTitle = [NSString stringWithFormat:@"%@ - %@", workspaceName, windowTitle];
+	[window setTitle:newTitle];
+	NSLog(@"window title: %@", [window title]);
+	NSLog(@"window representedURL: %@", [window representedURL]);
+	NSLog(@"-------------");
 }
 
 @end
