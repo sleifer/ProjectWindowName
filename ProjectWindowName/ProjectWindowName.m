@@ -41,37 +41,9 @@ static ProjectWindowName *sharedPlugin;
         // reference to plugin's bundle, for resource access
         self.bundle = plugin;
         
-        // Create menu items, initialize UI, etc.
-
-        // Sample Menu Item:
-        NSMenuItem *menuItem = [[NSApp mainMenu] itemWithTitle:@"Edit"];
-        if (menuItem) {
-            [[menuItem submenu] addItem:[NSMenuItem separatorItem]];
-            NSMenuItem *actionMenuItem = [[NSMenuItem alloc] initWithTitle:@"Do Action" action:@selector(doMenuAction) keyEquivalent:@""];
-            [actionMenuItem setTarget:self];
-            [[menuItem submenu] addItem:actionMenuItem];
-        }
-		
 		[self swizzler];
     }
     return self;
-}
-
-- (void)tryFScript
-{
-	NSBundle* bundle = nil;
-	BOOL available = NO;
-	bundle = [NSBundle bundleWithPath:@"/Library/Frameworks/FScript.framework"];
-	if (bundle) {
-		available = [bundle load];
-	}
-	if (available) {
-		Class menuClass = NSClassFromString(@"FScriptMenuItem");
-		
-		if (menuClass) {
-			[[NSApp mainMenu] addItem:[[menuClass alloc] init]];
-		}
-	}
 }
 
 - (void)swizzler {
@@ -106,13 +78,6 @@ static ProjectWindowName *sharedPlugin;
 	}
 }
 
-// Sample Action, for menu item:
-- (void)doMenuAction
-{
-    NSAlert *alert = [NSAlert alertWithMessageText:@"Hello, World" defaultButton:nil alternateButton:nil otherButton:nil informativeTextWithFormat:@""];
-    [alert runModal];
-}
-
 - (void)dealloc
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -125,28 +90,23 @@ static ProjectWindowName *sharedPlugin;
 - (void)xxx__updateWindowTitle
 {
 	[self xxx__updateWindowTitle];
-	NSLog(@"xxx__updateWindowTitle: %@ [%@]", self, NSStringFromClass([self class]));
 	
 	NSWindow *window = [self performSelector:@selector(window)];
-	NSString *windowTitle = [window title];
-	NSLog(@"window: %@", window);
-	NSLog(@"window title: %@", [window title]);
-	NSLog(@"window representedURL: %@", [window representedURL]);
+	NSString *windowTitle = nil;
+	if (window != nil) {
+		windowTitle = [window title];
+	}
 	
 	id workspace = object_getIvar(self, class_getInstanceVariable([self class], "_workspace"));
-	NSLog(@"_workspace %@", workspace);
+	NSString *workspaceName = nil;
+	if (workspace != nil) {
+		workspaceName = [workspace performSelector:@selector(name)];
+	}
 
-	NSString *workspaceName = [workspace performSelector:@selector(name)];
-	NSLog(@"representingTitle: %@", [workspace performSelector:@selector(representingTitle)]);
-	NSLog(@"representingFilePath: %@", [workspace performSelector:@selector(representingFilePath)]);
-	NSLog(@"name: %@", [workspace performSelector:@selector(name)]);
-	NSLog(@"displayName: %@", [workspace performSelector:@selector(displayName)]);
-
-	NSString *newTitle = [NSString stringWithFormat:@"%@ - %@", workspaceName, windowTitle];
-	[window setTitle:newTitle];
-	NSLog(@"window title: %@", [window title]);
-	NSLog(@"window representedURL: %@", [window representedURL]);
-	NSLog(@"-------------");
+	if (workspaceName != nil && [workspaceName length] > 0 && windowTitle != nil && [windowTitle length] > 0) {
+		NSString *newTitle = [NSString stringWithFormat:@"%@ - %@", workspaceName, windowTitle];
+		[window setTitle:newTitle];
+	}
 }
 
 @end
