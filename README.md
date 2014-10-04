@@ -12,4 +12,4 @@ ProjectWindowName has been tested with Xcode (5.1.1, 6.0, 6.1) on OS X 10.9.x.
 
 ## Usage
 
-`ProjectWindowName` has no user interface, it changes Project / Workspace window title to include the Project name. e.g. "<Project name> - <File name>".
+`ProjectWindowName` has no user interface, it changes the Project / Workspace window title to include the Project name. e.g. "[Project name] - [File name]".
