@@ -26,11 +26,22 @@
 
 #import <objc/objc-runtime.h>
 
+NSString *const PathModeKey = @"ProjectWindowName_PathModeKey";
+
+typedef NS_ENUM (NSInteger, WindowTitlePathMode) {
+    WindowTitlePathMode_FilePath = 0,
+    WindowTitlePathMode_ProjectPath
+};
+
 static ProjectWindowName *sharedPlugin;
 
-@interface ProjectWindowName()
+@interface ProjectWindowName ()
 
 @property (nonatomic, strong, readwrite) NSBundle *bundle;
+@property (nonatomic, strong, readwrite) NSMenuItem *filePathItem;
+@property (nonatomic, strong, readwrite) NSMenuItem *projectPathItem;
+@property (nonatomic, assign, readwrite) WindowTitlePathMode titlePathMode;
+
 @end
 
 @implementation ProjectWindowName
@@ -56,42 +67,120 @@ static ProjectWindowName *sharedPlugin;
     if (self = [super init]) {
         // reference to plugin's bundle, for resource access
         self.bundle = plugin;
-        
-		[self swizzler];
+
+        [self swizzler];
+		[self readPathMode];
+        [self installMenus];
+		[self updateMenus];
     }
     return self;
 }
 
-- (void)swizzler {
-	static dispatch_once_t onceToken;
-	dispatch_once(&onceToken, ^{
-		Class IDEWorkspaceWindowControllerClass = NSClassFromString (@"IDEWorkspaceWindowController");
-		
-		[self swizzleClass:IDEWorkspaceWindowControllerClass originalSelector:@selector(_updateWindowTitle) swizzledSelector:@selector(xxx__updateWindowTitle) instanceMethod:YES];
-	});
+- (void)installMenus
+{
+    NSMenuItem *menuItem = [[NSApp mainMenu] itemWithTitle:@"Edit"];
+    if (menuItem) {
+        NSMenu *optionsMenu = [[NSMenu alloc] initWithTitle:@"Window Title Path"];
+        NSMenuItem *filePathOption = [optionsMenu addItemWithTitle:@"File Path" action:@selector(doFilePathMenuAction) keyEquivalent:@""];
+        [filePathOption setTarget:self];
+        NSMenuItem *projectPathOption = [optionsMenu addItemWithTitle:@"Project Path" action:@selector(doProjectPathMenuAction) keyEquivalent:@""];
+        [projectPathOption setTarget:self];
+        self.filePathItem = filePathOption;
+
+        [[menuItem submenu] addItem:[NSMenuItem separatorItem]];
+        NSMenuItem *actionMenuItem = [[NSMenuItem alloc] initWithTitle:@"Window Title Path" action:@selector(doMenuAction) keyEquivalent:@""];
+        [actionMenuItem setTarget:self];
+        [actionMenuItem setSubmenu:optionsMenu];
+        [[menuItem submenu] addItem:actionMenuItem];
+        self.projectPathItem = projectPathOption;
+    }
+}
+
+- (void)doMenuAction
+{
+}
+
+- (void)doFilePathMenuAction
+{
+	[self setPathMode:WindowTitlePathMode_FilePath];
+	[self updateMenus];
+	[self refreshAllWindowTitles];
+}
+
+- (void)doProjectPathMenuAction
+{
+	[self setPathMode:WindowTitlePathMode_ProjectPath];
+	[self updateMenus];
+	[self refreshAllWindowTitles];
+}
+
+- (void)updateMenus
+{
+	if (self.titlePathMode == WindowTitlePathMode_FilePath) {
+		[self.filePathItem setState:NSOnState];
+		[self.projectPathItem setState:NSOffState];
+	} else {
+		[self.filePathItem setState:NSOffState];
+		[self.projectPathItem setState:NSOnState];
+	}
+}
+
+- (void)readPathMode
+{
+	id value = [[NSUserDefaults standardUserDefaults] valueForKey:PathModeKey];
+	if (value != nil) {
+		self.titlePathMode = (WindowTitlePathMode) [value integerValue];
+	} else {
+		self.titlePathMode = WindowTitlePathMode_FilePath;
+	}
+}
+
+- (void)setPathMode:(WindowTitlePathMode)newMode
+{
+	[[NSUserDefaults standardUserDefaults] setInteger:newMode forKey:PathModeKey];
+	self.titlePathMode = newMode;
+}
+
+- (void)refreshAllWindowTitles
+{
+	Class IDEWorkspaceWindowControllerClass = NSClassFromString(@"IDEWorkspaceWindowController");
+	NSArray *allControllers = [IDEWorkspaceWindowControllerClass performSelector:@selector(workspaceWindowControllers)];
+	for (id ctrl in allControllers) {
+		[ctrl performSelector:@selector(_updateWindowTitle)];
+	}
+}
+
+- (void)swizzler
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        Class IDEWorkspaceWindowControllerClass = NSClassFromString(@"IDEWorkspaceWindowController");
+
+        [self swizzleClass:IDEWorkspaceWindowControllerClass originalSelector:@selector(_updateWindowTitle) swizzledSelector:@selector(xxx__updateWindowTitle) instanceMethod:YES];
+    });
 }
 
 - (void)swizzleClass:(Class)class originalSelector:(SEL)originalSelector swizzledSelector:(SEL)swizzledSelector instanceMethod:(BOOL)instanceMethod
 {
-	if (class) {
-		Method originalMethod;
-		Method swizzledMethod;
-		if (instanceMethod) {
-			originalMethod = class_getInstanceMethod(class, originalSelector);
-			swizzledMethod = class_getInstanceMethod(class, swizzledSelector);
-		} else {
-			originalMethod = class_getClassMethod(class, originalSelector);
-			swizzledMethod = class_getClassMethod(class, swizzledSelector);
-		}
-		
-		BOOL didAddMethod = class_addMethod(class, originalSelector, method_getImplementation(swizzledMethod), method_getTypeEncoding(swizzledMethod));
-		
-		if (didAddMethod) {
-			class_replaceMethod(class, swizzledSelector, method_getImplementation(originalMethod), method_getTypeEncoding(originalMethod));
-		} else {
-			method_exchangeImplementations(originalMethod, swizzledMethod);
-		}
-	}
+    if (class) {
+        Method originalMethod;
+        Method swizzledMethod;
+        if (instanceMethod) {
+            originalMethod = class_getInstanceMethod(class, originalSelector);
+            swizzledMethod = class_getInstanceMethod(class, swizzledSelector);
+        } else {
+            originalMethod = class_getClassMethod(class, originalSelector);
+            swizzledMethod = class_getClassMethod(class, swizzledSelector);
+        }
+
+        BOOL didAddMethod = class_addMethod(class, originalSelector, method_getImplementation(swizzledMethod), method_getTypeEncoding(swizzledMethod));
+
+        if (didAddMethod) {
+            class_replaceMethod(class, swizzledSelector, method_getImplementation(originalMethod), method_getTypeEncoding(originalMethod));
+        } else {
+            method_exchangeImplementations(originalMethod, swizzledMethod);
+        }
+    }
 }
 
 - (void)dealloc
@@ -105,24 +194,37 @@ static ProjectWindowName *sharedPlugin;
 
 - (void)xxx__updateWindowTitle
 {
-	[self xxx__updateWindowTitle];
-	
-	NSWindow *window = [self performSelector:@selector(window)];
-	NSString *windowTitle = nil;
-	if (window != nil) {
-		windowTitle = [window title];
-	}
-	
-	id workspace = object_getIvar(self, class_getInstanceVariable([self class], "_workspace"));
-	NSString *workspaceName = nil;
-	if (workspace != nil) {
-		workspaceName = [workspace performSelector:@selector(name)];
-	}
+    [self xxx__updateWindowTitle];
 
-	if (workspaceName != nil && [workspaceName length] > 0 && windowTitle != nil && [windowTitle length] > 0) {
-		NSString *newTitle = [NSString stringWithFormat:@"%@ - %@", workspaceName, windowTitle];
-		[window setTitle:newTitle];
-	}
+    NSWindow *window = [self performSelector:@selector(window)];
+    NSString *windowTitle = nil;
+    if (window != nil) {
+        windowTitle = [window title];
+    }
+
+    id workspace = object_getIvar(self, class_getInstanceVariable([self class], "_workspace"));
+    NSString *workspaceName = nil;
+    if (workspace != nil) {
+        workspaceName = [workspace performSelector:@selector(name)];
+    }
+
+    id representingFilePath = nil;
+    if (workspace != nil) {
+        representingFilePath = [workspace performSelector:@selector(representingFilePath)];
+    }
+
+    NSURL *fileURL = nil;
+    if (representingFilePath != nil) {
+        fileURL = [representingFilePath performSelector:@selector(fileURL)];
+    }
+
+    if (workspaceName != nil && [workspaceName length] > 0 && windowTitle != nil && [windowTitle length] > 0) {
+        NSString *newTitle = [NSString stringWithFormat:@"%@ - %@", workspaceName, windowTitle];
+		if (sharedPlugin.titlePathMode == WindowTitlePathMode_ProjectPath) {
+			[window setRepresentedURL:fileURL];
+		}
+        [window setTitle:newTitle];
+    }
 }
 
 @end
