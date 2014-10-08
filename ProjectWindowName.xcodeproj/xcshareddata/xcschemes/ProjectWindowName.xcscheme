@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "890A4B3E171F031300AFE577"
+               BlueprintIdentifier = "DBD0FB2519DDC6800055ED34"
                BuildableName = "ProjectWindowName.xcplugin"
                BlueprintName = "ProjectWindowName"
                ReferencedContainer = "container:ProjectWindowName.xcodeproj">
@@ -61,7 +61,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "890A4B3E171F031300AFE577"
+            BlueprintIdentifier = "DBD0FB2519DDC6800055ED34"
             BuildableName = "ProjectWindowName.xcplugin"
             BlueprintName = "ProjectWindowName"
             ReferencedContainer = "container:ProjectWindowName.xcodeproj">

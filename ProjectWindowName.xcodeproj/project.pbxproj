@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		DBD0FB2A19DDC6800055ED34 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DBD0FB2919DDC6800055ED34 /* AppKit.framework */; };
 		DBD0FB2C19DDC6800055ED34 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DBD0FB2B19DDC6800055ED34 /* Foundation.framework */; };
-		DBD0FB3119DDC6800055ED34 /* ProjectWindowName.xcscheme in Resources */ = {isa = PBXBuildFile; fileRef = DBD0FB3019DDC6800055ED34 /* ProjectWindowName.xcscheme */; };
 		DBD0FB3419DDC6800055ED34 /* ProjectWindowName.m in Sources */ = {isa = PBXBuildFile; fileRef = DBD0FB3319DDC6800055ED34 /* ProjectWindowName.m */; };
 /* End PBXBuildFile section */
 
@@ -18,7 +17,6 @@
 		DBD0FB2919DDC6800055ED34 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		DBD0FB2B19DDC6800055ED34 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		DBD0FB2F19DDC6800055ED34 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		DBD0FB3019DDC6800055ED34 /* ProjectWindowName.xcscheme */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = ProjectWindowName.xcscheme; path = ProjectWindowName.xcodeproj/xcshareddata/xcschemes/ProjectWindowName.xcscheme; sourceTree = SOURCE_ROOT; };
 		DBD0FB3219DDC6800055ED34 /* ProjectWindowName.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProjectWindowName.h; sourceTree = "<group>"; };
 		DBD0FB3319DDC6800055ED34 /* ProjectWindowName.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProjectWindowName.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -76,7 +74,6 @@
 			isa = PBXGroup;
 			children = (
 				DBD0FB2F19DDC6800055ED34 /* Info.plist */,
-				DBD0FB3019DDC6800055ED34 /* ProjectWindowName.xcscheme */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -137,7 +134,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DBD0FB3119DDC6800055ED34 /* ProjectWindowName.xcscheme in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -271,6 +267,7 @@
 				DBD0FB3919DDC6800055ED34 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
